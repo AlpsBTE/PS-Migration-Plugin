@@ -1,0 +1,11 @@
+name: PS-Migration-Plugin
+version: '1.0-SNAPSHOT'
+main: com.alpsbte.pSMigrationPlugin.PSMigrationPlugin
+api-version: '1.21'
+authors: [ Cinnazeyy ]
+description: A plot system migration plugin for upgrading plot versions
+commands:
+  migrateplots:
+    description: Migrates every plot of plot version 3 to plot version 4
+    usage: /migrateplots
+    permission: plotsystem.admin

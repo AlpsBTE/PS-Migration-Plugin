@@ -1,0 +1,14 @@
+database:
+  v1:
+    db-url: jdbc:mariadb://adress:3306/
+    db-name: plotsystem
+    username: plotsystem
+    password: minecraft
+  v2:
+    db-url: jdbc:mariadb://adress:3306/
+    db-name: plotsystem
+    username: plotsystem
+    password: minecraft
+
+# NOTE: Do not change
+config-version: 3.0
