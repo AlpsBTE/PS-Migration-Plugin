@@ -50,7 +50,7 @@ public class PlotDataProvider {
 
     public static void updatePlot(PlotV2 plot, String mcVersion, byte[] initialSchematic, byte[] completedSchematic) {
         try {
-            DatabaseV2Connection.createStatement("UPDATE plot SET mc_version = ?, initial_schematic=?, complete_schematic=? WHERE plot_id = ?")
+            DatabaseV2Connection.createStatement("UPDATE plot SET mc_version=?, initial_schematic=?, complete_schematic=?, plot_version=4 WHERE plot_id=?")
                     .setValue(mcVersion)
                     .setValue(initialSchematic)
                     .setValue(completedSchematic)
