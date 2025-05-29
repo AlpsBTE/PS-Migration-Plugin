@@ -16,6 +16,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
@@ -25,7 +26,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class CMD_MigratePlots implements CommandExecutor {
-    public final static String schematicsPath = Paths.get(PSMigrationPlugin.getPlugin().getDataFolder().getAbsolutePath(), "schematics") + File.separator;
+    public final static String schematicsPath = Paths.get(Bukkit.getPluginsFolder().getAbsolutePath(), "Plot-System", "schematics") + File.separator;
 
     @Override
     public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String @NotNull [] strings) {
@@ -39,7 +40,7 @@ public class CMD_MigratePlots implements CommandExecutor {
         return false;
     }
 
-    private void migratePlot(PlotV2 migratePlot) {
+    private void migratePlot(@NotNull PlotV2 migratePlot) {
         PSMigrationPlugin.getPlugin().getComponentLogger().info("Migrating plot {}...", migratePlot.getId());
 
         Optional<PlotV1> oldPlot = PlotDataProvider.getOldPlot(migratePlot.getId());
@@ -65,7 +66,8 @@ public class CMD_MigratePlots implements CommandExecutor {
         PSMigrationPlugin.getPlugin().getComponentLogger().info("#{} migrated!", migratePlot.getId());
     }
 
-    private InitialSchematicData getInitialSchematic(PlotV1 oldPlot) {
+    @Contract("_ -> new")
+    private @NotNull InitialSchematicData getInitialSchematic(@NotNull PlotV1 oldPlot) {
         Path filePath = Paths.get(
                 schematicsPath,
                 String.valueOf(oldPlot.getServerId()),
@@ -90,7 +92,7 @@ public class CMD_MigratePlots implements CommandExecutor {
         return new InitialSchematicData(outputStream.toByteArray(), minY);
     }
 
-    private byte[] getCompletedSchematic(PlotV1 oldPlot, int initialMinY) {
+    private byte @NotNull [] getCompletedSchematic(@NotNull PlotV1 oldPlot, int initialMinY) {
         Path filePath = Paths.get(
                 schematicsPath,
                 String.valueOf(oldPlot.getServerId()),
