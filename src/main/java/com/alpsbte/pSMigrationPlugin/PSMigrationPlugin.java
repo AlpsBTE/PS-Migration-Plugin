@@ -2,6 +2,7 @@ package com.alpsbte.pSMigrationPlugin;
 
 import com.alpsbte.alpslib.io.YamlFileFactory;
 import com.alpsbte.alpslib.io.config.ConfigNotImplementedException;
+import com.alpsbte.pSMigrationPlugin.commands.CMD_GenerateLanguageSection;
 import com.alpsbte.pSMigrationPlugin.commands.CMD_MigratePlots;
 import com.alpsbte.pSMigrationPlugin.core.config.ConfigUtil;
 import com.alpsbte.pSMigrationPlugin.core.database.DatabaseV1Connection;
@@ -48,6 +49,7 @@ public final class PSMigrationPlugin extends JavaPlugin {
 
         // register commands
         Objects.requireNonNull(getCommand("migrateplots")).setExecutor(new CMD_MigratePlots());
+        Objects.requireNonNull(getCommand("generatecitylang")).setExecutor(new CMD_GenerateLanguageSection());
     }
 
     @Override

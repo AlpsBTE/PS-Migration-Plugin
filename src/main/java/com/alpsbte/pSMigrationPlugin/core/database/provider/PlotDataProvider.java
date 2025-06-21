@@ -1,6 +1,8 @@
-package com.alpsbte.pSMigrationPlugin.core.database;
+package com.alpsbte.pSMigrationPlugin.core.database.provider;
 
 import com.alpsbte.pSMigrationPlugin.PSMigrationPlugin;
+import com.alpsbte.pSMigrationPlugin.core.database.DatabaseV1Connection;
+import com.alpsbte.pSMigrationPlugin.core.database.DatabaseV2Connection;
 import com.alpsbte.pSMigrationPlugin.core.database.model.PlotV1;
 import com.alpsbte.pSMigrationPlugin.core.database.model.PlotV2;
 import com.alpsbte.pSMigrationPlugin.core.database.model.Status;
@@ -12,6 +14,9 @@ import java.util.List;
 import java.util.Optional;
 
 public class PlotDataProvider {
+    private PlotDataProvider() {
+    }
+
     public static Optional<PlotV1> getOldPlot(int id) {
         try (ResultSet rs = DatabaseV1Connection.createStatement("SELECT p.id, c.server_id, p.city_project_id FROM plotsystem_plots p" +
                         " INNER JOIN plotsystem_city_projects ct ON p.city_project_id=ct.id" +

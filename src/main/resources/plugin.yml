@@ -9,3 +9,7 @@ commands:
     description: Migrates every plot of plot version 3 to plot version 4
     usage: /migrateplots
     permission: plotsystem.admin
+  generatecitylang:
+    description: Generate the database section of the language files for city projects
+    usage: /generatecitylang
+    permission: plotsystem.admin

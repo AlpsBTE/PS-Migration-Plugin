@@ -1,7 +1,7 @@
 package com.alpsbte.pSMigrationPlugin.commands;
 
 import com.alpsbte.pSMigrationPlugin.PSMigrationPlugin;
-import com.alpsbte.pSMigrationPlugin.core.database.PlotDataProvider;
+import com.alpsbte.pSMigrationPlugin.core.database.provider.PlotDataProvider;
 import com.alpsbte.pSMigrationPlugin.core.database.model.PlotV1;
 import com.alpsbte.pSMigrationPlugin.core.database.model.PlotV2;
 import com.alpsbte.pSMigrationPlugin.core.database.model.Status;
@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class CMD_MigratePlots implements CommandExecutor {
-    public final static String schematicsPath = Paths.get(Bukkit.getPluginsFolder().getAbsolutePath(), "Plot-System", "schematics") + File.separator;
+    public static final String schematicsPath = Paths.get(Bukkit.getPluginsFolder().getAbsolutePath(), "Plot-System", "schematics") + File.separator;
 
     @Override
     public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String @NotNull [] strings) {
