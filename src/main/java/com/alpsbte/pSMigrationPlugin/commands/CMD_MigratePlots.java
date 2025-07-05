@@ -24,6 +24,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 public class CMD_MigratePlots implements CommandExecutor {
     public static final String schematicsPath = Paths.get(Bukkit.getPluginsFolder().getAbsolutePath(), "Plot-System", "schematics") + File.separator;
@@ -32,11 +33,19 @@ public class CMD_MigratePlots implements CommandExecutor {
     public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String @NotNull [] strings) {
         if (!commandSender.hasPermission("plotsystem.admin")) return true;
 
-        List<PlotV2> migrationPlots = PlotDataProvider.getMigrationPlots();
-        commandSender.sendMessage(Component.text("Found " + migrationPlots.size() + " plots to migrate..."));
+        CompletableFuture.runAsync(() -> {
+            List<PlotV2> migrationPlots = PlotDataProvider.getMigrationPlots();
+            commandSender.sendMessage(Component.text("Found " + migrationPlots.size() + " plots to migrate..."));
 
-        for (PlotV2 plot : migrationPlots) migratePlot(plot);
-
+            for (PlotV2 plot : migrationPlots) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    PSMigrationPlugin.getPlugin().getComponentLogger().error("Could not sleep thread!");
+                }
+                Bukkit.getScheduler().runTask(PSMigrationPlugin.getPlugin(), () -> migratePlot(plot));
+            }
+        });
         return false;
     }
 
