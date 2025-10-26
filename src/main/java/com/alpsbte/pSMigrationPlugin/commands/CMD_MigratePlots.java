@@ -1,5 +1,6 @@
 package com.alpsbte.pSMigrationPlugin.commands;
 
+import com.alpsbte.alpslib.utils.AlpsUtils;
 import com.alpsbte.pSMigrationPlugin.PSMigrationPlugin;
 import com.alpsbte.pSMigrationPlugin.core.database.provider.PlotDataProvider;
 import com.alpsbte.pSMigrationPlugin.core.database.model.PlotV1;
@@ -23,6 +24,7 @@ import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -35,16 +37,24 @@ public class CMD_MigratePlots implements CommandExecutor {
 
         CompletableFuture.runAsync(() -> {
             List<PlotV2> migrationPlots = PlotDataProvider.getMigrationPlots();
-            commandSender.sendMessage(Component.text("Found " + migrationPlots.size() + " plots to migrate..."));
+
+            int max = (strings.length > 0) ? Objects.requireNonNullElse(AlpsUtils.tryParseInt(strings[0]), migrationPlots.size()) : migrationPlots.size();
+
+            commandSender.sendMessage(Component.text("Found " + migrationPlots.size() + " plots to migrate, limit is " + max + "..."));
+
+            int count = 0;
 
             for (PlotV2 plot : migrationPlots) {
+                if (count > max) break;
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
                     PSMigrationPlugin.getPlugin().getComponentLogger().error("Could not sleep thread!");
                 }
                 Bukkit.getScheduler().runTask(PSMigrationPlugin.getPlugin(), () -> migratePlot(plot));
+                count++;
             }
+            commandSender.sendMessage(Component.text("Migrated " + Math.min(max, migrationPlots.size()) + " plots!"));
         });
         return false;
     }
@@ -84,6 +94,17 @@ public class CMD_MigratePlots implements CommandExecutor {
                 oldPlot.getId() + "-env.schem");
         File environmentSchematic = filePath.toFile();
 
+        if (!environmentSchematic.exists()) {
+            filePath = Paths.get(
+                    schematicsPath,
+                    String.valueOf(oldPlot.getServerId()),
+                    String.valueOf(oldPlot.getCityProjectId()),
+                    oldPlot.getId() + "-env.schematic");
+            environmentSchematic = filePath.toFile();
+        }
+
+        PSMigrationPlugin.getPlugin().getComponentLogger().info("Load from file & write to database initial schematic: {}", filePath);
+
         Clipboard clipboard;
         try (ClipboardReader reader = BuiltInClipboardFormat.FAST_V2.getReader(new FileInputStream(environmentSchematic))) {
             clipboard = reader.read();
@@ -109,6 +130,17 @@ public class CMD_MigratePlots implements CommandExecutor {
                 String.valueOf(oldPlot.getCityProjectId()),
                 oldPlot.getId() + ".schem");
         File completedSchematicFile = filePath.toFile();
+
+        if (!completedSchematicFile.exists()) {
+            filePath = Paths.get(
+                    schematicsPath,
+                    String.valueOf(oldPlot.getServerId()),
+                    String.valueOf(oldPlot.getCityProjectId()),
+                    oldPlot.getId() + ".schematic");
+            completedSchematicFile = filePath.toFile();
+        }
+
+        PSMigrationPlugin.getPlugin().getComponentLogger().info("Load from file & write to database completed schematic: {}", filePath);
 
         Clipboard clipboard;
         try (ClipboardReader reader = BuiltInClipboardFormat.FAST_V2.getReader(new FileInputStream(completedSchematicFile))) {
