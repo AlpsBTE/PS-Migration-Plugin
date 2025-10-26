@@ -8,6 +8,8 @@ import com.alpsbte.pSMigrationPlugin.core.database.model.PlotV2;
 import com.alpsbte.pSMigrationPlugin.core.database.model.Status;
 import com.sk89q.worldedit.extent.clipboard.Clipboard;
 import com.sk89q.worldedit.extent.clipboard.io.BuiltInClipboardFormat;
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormat;
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormats;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardReader;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardWriter;
 import com.sk89q.worldedit.math.Vector3;
@@ -106,7 +108,9 @@ public class CMD_MigratePlots implements CommandExecutor {
         PSMigrationPlugin.getPlugin().getComponentLogger().info("Load from file & write to database initial schematic: {}", filePath);
 
         Clipboard clipboard;
-        try (ClipboardReader reader = BuiltInClipboardFormat.FAST_V2.getReader(new FileInputStream(environmentSchematic))) {
+
+        ClipboardFormat format = ClipboardFormats.findByFile(environmentSchematic);
+        try (ClipboardReader reader = format.getReader(new FileInputStream(environmentSchematic))) {
             clipboard = reader.read();
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -143,7 +147,9 @@ public class CMD_MigratePlots implements CommandExecutor {
         PSMigrationPlugin.getPlugin().getComponentLogger().info("Load from file & write to database completed schematic: {}", filePath);
 
         Clipboard clipboard;
-        try (ClipboardReader reader = BuiltInClipboardFormat.FAST_V2.getReader(new FileInputStream(completedSchematicFile))) {
+
+        ClipboardFormat format = ClipboardFormats.findByFile(completedSchematicFile);
+        try (ClipboardReader reader = format.getReader(new FileInputStream(completedSchematicFile))) {
             clipboard = reader.read();
         } catch (IOException e) {
             throw new RuntimeException(e);
