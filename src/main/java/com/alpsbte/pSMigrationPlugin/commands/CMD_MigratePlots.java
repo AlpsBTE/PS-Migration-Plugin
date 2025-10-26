@@ -53,7 +53,7 @@ public class CMD_MigratePlots implements CommandExecutor {
                 } catch (InterruptedException e) {
                     PSMigrationPlugin.getPlugin().getComponentLogger().error("Could not sleep thread!");
                 }
-                Bukkit.getScheduler().runTask(PSMigrationPlugin.getPlugin(), () -> migratePlot(plot));
+                migratePlot(plot);
                 count++;
             }
             commandSender.sendMessage(Component.text("Migrated " + Math.min(max, migrationPlots.size()) + " plots!"));
