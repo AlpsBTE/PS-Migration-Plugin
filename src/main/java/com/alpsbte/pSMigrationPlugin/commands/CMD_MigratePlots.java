@@ -2,6 +2,7 @@ package com.alpsbte.pSMigrationPlugin.commands;
 
 import com.alpsbte.alpslib.utils.AlpsUtils;
 import com.alpsbte.pSMigrationPlugin.PSMigrationPlugin;
+import com.alpsbte.pSMigrationPlugin.core.MyOS;
 import com.alpsbte.pSMigrationPlugin.core.database.provider.PlotDataProvider;
 import com.alpsbte.pSMigrationPlugin.core.database.model.PlotV1;
 import com.alpsbte.pSMigrationPlugin.core.database.model.PlotV2;
@@ -52,6 +53,7 @@ public class CMD_MigratePlots implements CommandExecutor {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
                     PSMigrationPlugin.getPlugin().getComponentLogger().error("Could not sleep thread!");
+                    Thread.currentThread().interrupt();
                 }
                 migratePlot(plot);
                 count++;
@@ -96,6 +98,8 @@ public class CMD_MigratePlots implements CommandExecutor {
                 oldPlot.getId() + "-env.schem");
         File environmentSchematic = filePath.toFile();
 
+        boolean useGzipWorkaround = false;
+
         if (!environmentSchematic.exists()) {
             filePath = Paths.get(
                     schematicsPath,
@@ -103,6 +107,7 @@ public class CMD_MigratePlots implements CommandExecutor {
                     String.valueOf(oldPlot.getCityProjectId()),
                     oldPlot.getId() + "-env.schematic");
             environmentSchematic = filePath.toFile();
+            useGzipWorkaround = true;
         }
 
         PSMigrationPlugin.getPlugin().getComponentLogger().info("Load from file & write to database initial schematic: {}", filePath);
@@ -118,7 +123,7 @@ public class CMD_MigratePlots implements CommandExecutor {
         int minY = clipboard.getRegion().getMinimumY();
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        try (ClipboardWriter writer = BuiltInClipboardFormat.FAST_V2.getWriter(outputStream)) {
+        try (ClipboardWriter writer = BuiltInClipboardFormat.FAST_V2.getWriter(useGzipWorkaround ? new MyOS(outputStream) : outputStream)) {
             writer.write(clipboard);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -135,6 +140,8 @@ public class CMD_MigratePlots implements CommandExecutor {
                 oldPlot.getId() + ".schem");
         File completedSchematicFile = filePath.toFile();
 
+        boolean useGzipWorkaround = false;
+
         if (!completedSchematicFile.exists()) {
             filePath = Paths.get(
                     schematicsPath,
@@ -142,6 +149,7 @@ public class CMD_MigratePlots implements CommandExecutor {
                     String.valueOf(oldPlot.getCityProjectId()),
                     oldPlot.getId() + ".schematic");
             completedSchematicFile = filePath.toFile();
+            useGzipWorkaround = true;
         }
 
         PSMigrationPlugin.getPlugin().getComponentLogger().info("Load from file & write to database completed schematic: {}", filePath);
@@ -156,7 +164,7 @@ public class CMD_MigratePlots implements CommandExecutor {
         }
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        try (ClipboardWriter writer = BuiltInClipboardFormat.FAST_V2.getWriter(outputStream)) {
+        try (ClipboardWriter writer = BuiltInClipboardFormat.FAST_V2.getWriter(useGzipWorkaround ? new MyOS(outputStream) : outputStream)) {
             double clipboardMinY = clipboard.getRegion().getMinimumY();
             double offset = clipboardMinY - initialMinY;
             writer.write(clipboard.transform(new AffineTransform().translate(Vector3.at(0,offset,0))));
