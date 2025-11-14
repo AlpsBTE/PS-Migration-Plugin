@@ -56,10 +56,15 @@ public class CMD_MigratePlots implements CommandExecutor {
                     PSMigrationPlugin.getPlugin().getComponentLogger().error("Could not sleep thread!");
                     Thread.currentThread().interrupt();
                 }
-                migratePlot(plot);
-                count++;
+                try {
+                    migratePlot(plot);
+                    count++;
+                } catch (Exception e) {
+                    PSMigrationPlugin.getPlugin().getComponentLogger().error("Could not migrate plot #{}!", plot.getId(), e);
+                }
             }
-            commandSender.sendMessage(Component.text("Migrated " + Math.min(max, migrationPlots.size()) + " plots!"));
+            commandSender.sendMessage(Component.text("Migrated " + count + " plots!"));
+            PSMigrationPlugin.getPlugin().getComponentLogger().info("Migrated {} plots!", count);
         });
         return false;
     }
@@ -111,10 +116,19 @@ public class CMD_MigratePlots implements CommandExecutor {
             useGzipWorkaround = true;
         }
 
+        if (!environmentSchematic.exists()) {
+            filePath = Paths.get(
+                    schematicsPath,
+                    String.valueOf(oldPlot.getServerId()),
+                    String.valueOf(oldPlot.getCityProjectId()),
+                    oldPlot.getId() + ".schematic");
+            environmentSchematic = filePath.toFile();
+            useGzipWorkaround = true;
+        }
+
         PSMigrationPlugin.getPlugin().getComponentLogger().info("Load from file & write to database initial schematic: {}", filePath);
 
         Clipboard clipboard;
-
         ClipboardFormat format = ClipboardFormats.findByFile(environmentSchematic);
         try (ClipboardReader reader = format.getReader(new FileInputStream(environmentSchematic))) {
             clipboard = reader.read();
@@ -147,6 +161,7 @@ public class CMD_MigratePlots implements CommandExecutor {
             filePath = Paths.get(
                     schematicsPath,
                     String.valueOf(oldPlot.getServerId()),
+                    "finishedSchematics",
                     String.valueOf(oldPlot.getCityProjectId()),
                     oldPlot.getId() + ".schematic");
             completedSchematicFile = filePath.toFile();
