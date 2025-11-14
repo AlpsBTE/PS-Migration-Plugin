@@ -4,112 +4,75 @@ import com.alpsbte.pSMigrationPlugin.PSMigrationPlugin;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-
-import static net.kyori.adventure.text.Component.text;
 
 public class DatabaseV2Connection {
+    private DatabaseV2Connection() {
+    }
 
-    private final static HikariConfig config = new HikariConfig();
-    private static HikariDataSource dataSource;
+    private static HikariDataSource hikari;
+    private static Logger logger;
 
-    private static int connectionClosed, connectionOpened;
-
-    public static void InitializeDatabase() throws ClassNotFoundException {
-        Class.forName("org.mariadb.jdbc.Driver");
-
+    /**
+     * Initializes the connection pool with the given configuration data.
+     *
+     */
+    public static void initializeDatabase() throws ClassNotFoundException {
         FileConfiguration configFile = PSMigrationPlugin.getPlugin().getConfig();
         String URL = configFile.getString("database.v2.db-url");
         String name = configFile.getString("database.v2.db-name");
         String username = configFile.getString("database.v2.username");
         String password = configFile.getString("database.v2.password");
 
-        config.setJdbcUrl(URL + name);
-        config.setUsername(username);
-        config.setPassword(password);
-        config.addDataSourceProperty("cachePrepStmts", "true");
-        config.addDataSourceProperty("prepStmtCacheSize", "250");
-        config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+        Class.forName("org.mariadb.jdbc.Driver");
+        HikariConfig hikariConfig = new HikariConfig();
+        hikariConfig.setJdbcUrl(URL + name + "?allowMultiQueries=true");
+        hikariConfig.setUsername(username);
+        hikariConfig.setPassword(password);
+        hikariConfig.addDataSourceProperty("cachePrepStmts", "true");
+        hikariConfig.addDataSourceProperty("prepStmtCacheSize", "250");
+        hikariConfig.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+        hikariConfig.addDataSourceProperty("useServerPrepStmts", "true");
 
-        dataSource = new HikariDataSource(config);
+        hikari = new HikariDataSource(hikariConfig);
+        logger = LoggerFactory.getLogger(DatabaseV1Connection.class);
+
     }
 
-    public static Connection getConnection() {
-        int retries = 3;
-        while (retries > 0) {
-            try {
-                return dataSource.getConnection();
-            } catch (SQLException ex) {
-                PSMigrationPlugin.getPlugin().getComponentLogger().error(text("Database connection failed!\n\n" + ex.getMessage()));
-            }
-            retries--;
+    /**
+     * Returns a new connection from the connection pool.
+     *
+     * @return An open SQL connection
+     * @throws SQLException If no connection is available
+     */
+    public static @NotNull Connection getConnection() throws SQLException {
+        if (hikari == null) {
+            throw new SQLException("Unable to get a connection from the pool. (hikari is null)");
         }
-        return null;
+
+        Connection connection = hikari.getConnection();
+        if (connection == null) {
+            throw new SQLException("Unable to get a connection from the pool. (getConnection returned null)");
+        }
+
+        return connection;
     }
 
-    public static DatabaseV2Connection.StatementBuilder createStatement(String sql) {
-        return new DatabaseV2Connection.StatementBuilder(sql);
-    }
-
-    public static void closeResultSet(ResultSet resultSet) throws SQLException {
-        if (resultSet.isClosed()
-                && resultSet.getStatement().isClosed()
-                && resultSet.getStatement().getConnection().isClosed())
-            return;
-
-        resultSet.close();
-        resultSet.getStatement().close();
-        resultSet.getStatement().getConnection().close();
-
-        connectionClosed++;
-
-        if (connectionOpened > connectionClosed + 5)
-            PSMigrationPlugin.getPlugin().getComponentLogger().error(text("There are multiple database connections opened. Please report this issue."));
-    }
-
-    public static class StatementBuilder {
-        private final String sql;
-        private final List<Object> values = new ArrayList<>();
-
-        public StatementBuilder(String sql) {
-            this.sql = sql;
-        }
-
-        public DatabaseV2Connection.StatementBuilder setValue(Object value) {
-            values.add(value);
-            return this;
-        }
-
-        public ResultSet executeQuery() throws SQLException {
-            Connection con = dataSource.getConnection();
-            PreparedStatement ps = Objects.requireNonNull(con).prepareStatement(sql);
-            ResultSet rs = iterateValues(ps).executeQuery();
-
-            connectionOpened++;
-
-            return rs;
-        }
-
-        public void executeUpdate() throws SQLException {
-            try (Connection con = dataSource.getConnection()) {
-                try (PreparedStatement ps = Objects.requireNonNull(con).prepareStatement(sql)) {
-                    iterateValues(ps).executeUpdate();
-                }
-            }
-        }
-
-        private PreparedStatement iterateValues(PreparedStatement ps) throws SQLException {
-            for (int i = 0; i < values.size(); i++) {
-                ps.setObject(i + 1, values.get(i));
-            }
-            return ps;
+    /**
+     * Closes the connection pool and releases all resources.
+     * Logs success or a warning if no connection exists, if logger is set.
+     */
+    public static void shutdown() {
+        if (hikari != null) {
+            hikari.close();
+            if (logger != null) logger.info("Database connection closed successfully.");
+        } else {
+            if (logger != null) logger.warn("No database connection to close.");
         }
     }
 }

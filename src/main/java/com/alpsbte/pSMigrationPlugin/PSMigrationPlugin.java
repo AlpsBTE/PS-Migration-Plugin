@@ -38,8 +38,8 @@ public final class PSMigrationPlugin extends JavaPlugin {
 
         // Initialize database connections
         try {
-            DatabaseV1Connection.InitializeDatabase();
-            DatabaseV2Connection.InitializeDatabase();
+            DatabaseV1Connection.initializeDatabase();
+            DatabaseV2Connection.initializeDatabase();
         } catch (Exception ex) {
             Bukkit.getConsoleSender().sendMessage(text("Could not initialize database connection."));
             getComponentLogger().error(text(ex.getMessage()), ex);
@@ -55,6 +55,8 @@ public final class PSMigrationPlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         // Plugin shutdown logic
+        DatabaseV1Connection.shutdown();
+        DatabaseV2Connection.shutdown();
     }
 
     @Override
