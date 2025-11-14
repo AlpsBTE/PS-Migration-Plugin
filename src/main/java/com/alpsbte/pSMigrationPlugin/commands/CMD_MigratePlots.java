@@ -3,18 +3,16 @@ package com.alpsbte.pSMigrationPlugin.commands;
 import com.alpsbte.alpslib.utils.AlpsUtils;
 import com.alpsbte.pSMigrationPlugin.PSMigrationPlugin;
 import com.alpsbte.pSMigrationPlugin.core.MyOS;
-import com.alpsbte.pSMigrationPlugin.core.database.provider.PlotDataProvider;
 import com.alpsbte.pSMigrationPlugin.core.database.model.PlotV1;
 import com.alpsbte.pSMigrationPlugin.core.database.model.PlotV2;
 import com.alpsbte.pSMigrationPlugin.core.database.model.Status;
+import com.alpsbte.pSMigrationPlugin.core.database.provider.PlotDataProvider;
 import com.sk89q.worldedit.extent.clipboard.Clipboard;
 import com.sk89q.worldedit.extent.clipboard.io.BuiltInClipboardFormat;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormat;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormats;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardReader;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardWriter;
-import com.sk89q.worldedit.math.Vector3;
-import com.sk89q.worldedit.math.transform.AffineTransform;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -23,7 +21,10 @@ import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -165,9 +166,9 @@ public class CMD_MigratePlots implements CommandExecutor {
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         try (ClipboardWriter writer = BuiltInClipboardFormat.FAST_V2.getWriter(useGzipWorkaround ? new MyOS(outputStream) : outputStream)) {
-            double clipboardMinY = clipboard.getRegion().getMinimumY();
-            double offset = clipboardMinY - initialMinY;
-            writer.write(clipboard.transform(new AffineTransform().translate(Vector3.at(0,offset,0))));
+            //double clipboardMinY = clipboard.getRegion().getMinimumY();
+            //double offset = clipboardMinY - initialMinY;
+            writer.write(clipboard/*.transform(new AffineTransform().translate(Vector3.at(0,offset,0)))*/);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
