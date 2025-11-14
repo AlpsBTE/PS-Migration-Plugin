@@ -25,7 +25,7 @@ public class PlotDataProvider {
             try (PreparedStatement preparedStatement = connection.prepareStatement("SELECT p.id, c.server_id, p.city_project_id FROM plotsystem_plots p" +
                     " INNER JOIN plotsystem_city_projects ct ON p.city_project_id=ct.id" +
                     " INNER JOIN plotsystem_countries c ON ct.country_id=c.id" +
-                    " WHERE p.version = 3 AND p.id=?")) {
+                    " WHERE p.id=?")) {
                 preparedStatement.setInt(1, id);
                 try (ResultSet rs = preparedStatement.executeQuery()) {
                     if (!rs.next()) return Optional.empty();
