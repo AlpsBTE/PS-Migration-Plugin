@@ -2,7 +2,6 @@ package com.alpsbte.pSMigrationPlugin.commands;
 
 import com.alpsbte.alpslib.utils.AlpsUtils;
 import com.alpsbte.pSMigrationPlugin.PSMigrationPlugin;
-import com.alpsbte.pSMigrationPlugin.core.MyOS;
 import com.alpsbte.pSMigrationPlugin.core.database.model.PlotV1;
 import com.alpsbte.pSMigrationPlugin.core.database.model.PlotV2;
 import com.alpsbte.pSMigrationPlugin.core.database.model.Status;
@@ -13,6 +12,8 @@ import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormat;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormats;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardReader;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardWriter;
+import com.sk89q.worldedit.math.Vector3;
+import com.sk89q.worldedit.math.transform.AffineTransform;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -104,8 +105,6 @@ public class CMD_MigratePlots implements CommandExecutor {
                 oldPlot.getId() + "-env.schem");
         File environmentSchematic = filePath.toFile();
 
-        boolean useGzipWorkaround = false;
-
         if (!environmentSchematic.exists()) {
             filePath = Paths.get(
                     schematicsPath,
@@ -113,7 +112,6 @@ public class CMD_MigratePlots implements CommandExecutor {
                     String.valueOf(oldPlot.getCityProjectId()),
                     oldPlot.getId() + "-env.schematic");
             environmentSchematic = filePath.toFile();
-            useGzipWorkaround = true;
         }
 
         if (!environmentSchematic.exists()) {
@@ -123,7 +121,6 @@ public class CMD_MigratePlots implements CommandExecutor {
                     String.valueOf(oldPlot.getCityProjectId()),
                     oldPlot.getId() + ".schematic");
             environmentSchematic = filePath.toFile();
-            useGzipWorkaround = true;
         }
 
         PSMigrationPlugin.getPlugin().getComponentLogger().info("Load from file & write to database initial schematic: {}", filePath);
@@ -138,7 +135,7 @@ public class CMD_MigratePlots implements CommandExecutor {
         int minY = clipboard.getRegion().getMinimumY();
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        try (ClipboardWriter writer = BuiltInClipboardFormat.FAST_V2.getWriter(useGzipWorkaround ? new MyOS(outputStream) : outputStream)) {
+        try (ClipboardWriter writer = BuiltInClipboardFormat.FAST_V2.getWriter(outputStream)) {
             writer.write(clipboard);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -155,8 +152,6 @@ public class CMD_MigratePlots implements CommandExecutor {
                 oldPlot.getId() + ".schem");
         File completedSchematicFile = filePath.toFile();
 
-        boolean useGzipWorkaround = false;
-
         if (!completedSchematicFile.exists()) {
             filePath = Paths.get(
                     schematicsPath,
@@ -165,7 +160,6 @@ public class CMD_MigratePlots implements CommandExecutor {
                     String.valueOf(oldPlot.getCityProjectId()),
                     oldPlot.getId() + ".schematic");
             completedSchematicFile = filePath.toFile();
-            useGzipWorkaround = true;
         }
 
         PSMigrationPlugin.getPlugin().getComponentLogger().info("Load from file & write to database completed schematic: {}", filePath);
@@ -180,10 +174,10 @@ public class CMD_MigratePlots implements CommandExecutor {
         }
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        try (ClipboardWriter writer = BuiltInClipboardFormat.FAST_V2.getWriter(useGzipWorkaround ? new MyOS(outputStream) : outputStream)) {
-            //double clipboardMinY = clipboard.getRegion().getMinimumY();
-            //double offset = clipboardMinY - initialMinY;
-            writer.write(clipboard/*.transform(new AffineTransform().translate(Vector3.at(0,offset,0)))*/);
+        try (ClipboardWriter writer = BuiltInClipboardFormat.FAST_V2.getWriter(outputStream)) {
+            double clipboardMinY = clipboard.getRegion().getMinimumY();
+            double offset = clipboardMinY - initialMinY;
+            writer.write(clipboard.transform(new AffineTransform().translate(Vector3.at(0, offset, 0))));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
